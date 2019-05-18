@@ -92,6 +92,7 @@ $BU_Cancel1.location                = New-Object System.Drawing.Point(300,360)
 $BU_Cancel1.Font                    = 'Microsoft Sans Serif,10'
 
 $Global:BackupFolder = $null
+$Global:BackupCounter = "False"
 
 $Form.controls.AddRange(@($L_SelectBackup1,$CB_VBR1,$CB_VEM1,$CB_VONE1,$RB_WinAuth1,$RB_SQLAuth1,$BU_Folder1,$BU_Start1,$BU_Cancel1))
 
@@ -129,6 +130,7 @@ $BU_Folder1.Add_Click({
     }
 })
 $BU_Start1.Add_Click({
+    $BU_Start1.Text = "Running..."
     if ($RB_WinAuth1.Checked -eq "True"){
         if (!$CB_VBR1.Checked -and !$CB_VEM1.Checked -and !$CB_VONE1.Checked){
             [System.Windows.Forms.MessageBox]::Show("No Veeam Database selected!", "Warning", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
@@ -138,14 +140,15 @@ $BU_Start1.Add_Click({
         }
         if ($CB_VBR1.Checked -eq "True"){    
             try{  
-                $VBRSQLDBName = (get-item  -ErrorAction -Stop "HKLM:\SOFTWARE\Veeam\Veeam Backup and Replication\").GetValue("SqlDatabaseName")
-                $VBRSQLInstanceName = (get-item -"HKLM:\SOFTWARE\Veeam\Veeam Backup and Replication\").GetValue("SqlInstanceName")
+                $VBRSQLDBName = (get-item  -ErrorAction Stop "HKLM:\SOFTWARE\Veeam\Veeam Backup and Replication\").GetValue("SqlDatabaseName")
+                $VBRSQLInstanceName = (get-item "HKLM:\SOFTWARE\Veeam\Veeam Backup and Replication\").GetValue("SqlInstanceName")
                 $VBRSQLServerName = (get-item "HKLM:\SOFTWARE\Veeam\Veeam Backup and Replication\").GetValue("SqlServerName")
 
                 $BackupFilePath = $Global:BackupFolder + "\"+ $VBRSQLDBName + ".bak"       
                 $BackupQuery = "BACKUP DATABASE $VBRSQLDBName TO DISK = '$BackupFilePath'"
                 try{
                     Invoke-Sqlcmd -ErrorAction Stop -ServerInstance $VBRSQLServerName\$VBRSQLInstanceName -Database $VBRSQLDBName -Query $BackupQuery 
+                    $Global:BackupCounter = "True"
                     [System.Windows.Forms.MessageBox]::Show("Veeam BR backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)            
                 }
                 catch{
@@ -158,7 +161,7 @@ $BU_Start1.Add_Click({
         }
         if ($CB_VEM1.Checked -eq "True"){
             try{
-                $VEMSQLDBName = (get-item -ErrorAction -Stop "HKLM:\SOFTWARE\Veeam\Veeam Backup Reporting\").GetValue("SqlDatabaseName")
+                $VEMSQLDBName = (get-item -ErrorAction Stop "HKLM:\SOFTWARE\Veeam\Veeam Backup Reporting\").GetValue("SqlDatabaseName")
                 $VEMSQLInstanceName = (get-item "HKLM:\SOFTWARE\Veeam\Veeam Backup Reporting\").GetValue("SqlInstanceName")
                 $VEMSQLServerName = (get-item "HKLM:\SOFTWARE\Veeam\Veeam Backup Reporting\").GetValue("SqlServerName")
 
@@ -166,6 +169,7 @@ $BU_Start1.Add_Click({
                 $BackupQuery = "BACKUP DATABASE $VEMSQLDBName TO DISK = '$BackupFilePath'"
                 try{
                     Invoke-Sqlcmd -ErrorAction Stop -ServerInstance $VEMSQLServerName\$VEMSQLInstanceName -Database $VEMSQLDBName -Query $BackupQuery
+                    $Global:BackupCounter = "True"
                     [System.Windows.Forms.MessageBox]::Show("Veeam EM backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)               
                 }
                 catch{
@@ -178,13 +182,14 @@ $BU_Start1.Add_Click({
         }
         if ($CB_VONE1.Checked -eq "True") {
             try{
-                $VONESQLDBName = (get-item -ErrorAction -Stop "HKLM:\SOFTWARE\Veeam\Veeam ONE Monitor\db_config\").GetValue("db_name")
+                $VONESQLDBName = (get-item -ErrorAction Stop "HKLM:\SOFTWARE\Veeam\Veeam ONE Monitor\db_config\").GetValue("db_name")
                 $VONESQLServerAndInstanceName = (get-item "HKLM:\SOFTWARE\Veeam\Veeam ONE Monitor\db_config\").GetValue("host")
                 
                 $BackupFilePath = $Global:BackupFolder + "\"+ $VONESQLDBName + ".bak"       
                 $BackupQuery = "BACKUP DATABASE $VONESQLDBName TO DISK = '$BackupFilePath'"
                 try{
                     Invoke-Sqlcmd -ErrorAction Stop -ServerInstance $VONESQLServerAndInstanceName -Database $VONESQLDBName -Query $BackupQuery
+                    $Global:BackupCounter = "True"
                     [System.Windows.Forms.MessageBox]::Show("Veeam ONE backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)               
                 }
                 catch{
@@ -195,12 +200,17 @@ $BU_Start1.Add_Click({
                 [System.Windows.Forms.MessageBox]::Show("No Veeam ONE installation found in registry!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)        
             }
         }
-        $Form.Dispose()
+        if ($Global:BackupCounter -eq "True"){
+            $Form.Dispose()
+        }
+        else{
+            $BU_Start1.Text = "Start"
+        }
     }
     else {
         $UserName = $TB_UserName1.Text
         $Password = $TB_Password1.Text
-
+        $BU_Start1.Text = "Running..."
         if (!$CB_VBR1.Checked -and !$CB_VEM1.Checked -and !$CB_VONE1.Checked){
             [System.Windows.Forms.MessageBox]::Show("No Veeam Database selected!", "Warning", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
         }
@@ -209,14 +219,15 @@ $BU_Start1.Add_Click({
         }
         if ($CB_VBR1.Checked -eq "True"){    
             try{  
-                $VBRSQLDBName = (get-item  -ErrorAction -Stop "HKLM:\SOFTWARE\Veeam\Veeam Backup and Replication\").GetValue("SqlDatabaseName")
-                $VBRSQLInstanceName = (get-item -"HKLM:\SOFTWARE\Veeam\Veeam Backup and Replication\").GetValue("SqlInstanceName")
+                $VBRSQLDBName = (get-item  -ErrorAction Stop "HKLM:\SOFTWARE\Veeam\Veeam Backup and Replication\").GetValue("SqlDatabaseName")
+                $VBRSQLInstanceName = (get-item "HKLM:\SOFTWARE\Veeam\Veeam Backup and Replication\").GetValue("SqlInstanceName")
                 $VBRSQLServerName = (get-item "HKLM:\SOFTWARE\Veeam\Veeam Backup and Replication\").GetValue("SqlServerName")
 
                 $BackupFilePath = $Global:BackupFolder + "\"+ $VBRSQLDBName + ".bak"       
                 $BackupQuery = "BACKUP DATABASE $VBRSQLDBName TO DISK = '$BackupFilePath'"
                 try{
                     Invoke-Sqlcmd -ErrorAction Stop -ServerInstance $VBRSQLServerName\$VBRSQLInstanceName -Database $VBRSQLDBName -Username $UserName -Password $Password -Query $BackupQuery 
+                    $Global:BackupCounter = "True"
                     [System.Windows.Forms.MessageBox]::Show("Veeam BR backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)            
                 }
                 catch{
@@ -229,7 +240,7 @@ $BU_Start1.Add_Click({
         }
         if ($CB_VEM1.Checked -eq "True"){
             try{
-                $VEMSQLDBName = (get-item -ErrorAction -Stop "HKLM:\SOFTWARE\Veeam\Veeam Backup Reporting\").GetValue("SqlDatabaseName")
+                $VEMSQLDBName = (get-item -ErrorAction Stop "HKLM:\SOFTWARE\Veeam\Veeam Backup Reporting\").GetValue("SqlDatabaseName")
                 $VEMSQLInstanceName = (get-item "HKLM:\SOFTWARE\Veeam\Veeam Backup Reporting\").GetValue("SqlInstanceName")
                 $VEMSQLServerName = (get-item "HKLM:\SOFTWARE\Veeam\Veeam Backup Reporting\").GetValue("SqlServerName")
 
@@ -237,6 +248,7 @@ $BU_Start1.Add_Click({
                 $BackupQuery = "BACKUP DATABASE $VEMSQLDBName TO DISK = '$BackupFilePath'"
                 try{
                     Invoke-Sqlcmd -ErrorAction Stop -ServerInstance $VEMSQLServerName\$VEMSQLInstanceName -Database $VEMSQLDBName -Username $UserName -Password $Password -Query $BackupQuery
+                    $Global:BackupCounter = "True"
                     [System.Windows.Forms.MessageBox]::Show("Veeam EM backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)               
                 }
                 catch{
@@ -249,13 +261,14 @@ $BU_Start1.Add_Click({
         }
         if ($CB_VONE1.Checked -eq "True") {
             try{
-                $VONESQLDBName = (get-item -ErrorAction -Stop "HKLM:\SOFTWARE\Veeam\Veeam ONE Monitor\db_config\").GetValue("db_name")
+                $VONESQLDBName = (get-item -ErrorAction Stop "HKLM:\SOFTWARE\Veeam\Veeam ONE Monitor\db_config\").GetValue("db_name")
                 $VONESQLServerAndInstanceName = (get-item "HKLM:\SOFTWARE\Veeam\Veeam ONE Monitor\db_config\").GetValue("host")
                 
                 $BackupFilePath = $Global:BackupFolder + "\"+ $VONESQLDBName + ".bak"       
                 $BackupQuery = "BACKUP DATABASE $VONESQLDBName TO DISK = '$BackupFilePath'"
                 try{
                     Invoke-Sqlcmd -ErrorAction Stop -ServerInstance $VONESQLServerAndInstanceName -Database $VONESQLDBName -Username $UserName -Password $Password -Query $BackupQuery
+                    $Global:BackupCounter = "True"
                     [System.Windows.Forms.MessageBox]::Show("Veeam ONE backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)               
                 }
                 catch{
@@ -266,7 +279,12 @@ $BU_Start1.Add_Click({
                 [System.Windows.Forms.MessageBox]::Show("No Veeam ONE installation found in registry!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)        
             }
         }
-        $Form.Dispose()
+        if ($Global:BackupCounter -eq "True"){
+            $Form.Dispose()
+        }
+        else{
+            $BU_Start1.Text = "Start"
+        }
     }
 })
 $BU_Cancel1.Add_Click({   

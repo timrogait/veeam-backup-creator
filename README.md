@@ -10,4 +10,4 @@ info@cloud-avenger.com or https://cloud-avenger.com for social media contacts.
 
 Have fun!
 
-© Tim Rogait
+© Tim Rogait, 2019

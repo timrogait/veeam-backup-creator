@@ -124,14 +124,13 @@ $GB_Backup4.text = "Status:"
 $GB_Backup4.location = New-Object System.Drawing.Point(11, 385)
 $GB_Backup4.Font = 'Microsoft Sans Serif,10'
 
-$PB_Status1 = New-Object System.Windows.Forms.ProgressBar
-$PB_Status1.Maximum = 100
-$PB_Status1.Minimum = 0
-$PB_Status1.height = 20
-$PB_Status1.width = 358
-$PB_Status1.Location = New-Object System.Drawing.Point(11, 30)
-$PB_Status1.Value = 0
-$PB_Status1.Style = 'Continuous'
+$L_Status1 = New-Object system.Windows.Forms.Label
+$L_Status1.text = "Ready"
+$L_Status1.width = 358
+$L_Status1.height = 20
+$L_Status1.location = New-Object System.Drawing.Point(11, 30)
+$L_Status1.Font = 'Microsoft Sans Serif,10'
+$L_Status1.BorderStyle = 'FixedSingle'
 
 $BU_Start1 = New-Object system.Windows.Forms.Button
 $BU_Start1.text = "Start"
@@ -151,11 +150,11 @@ $Global:BackupFolder = $null
 $Global:BackupCounter = "False" #Disposes Window only if Backup was successfull
 $Global:Date = Get-Date -f "dd.MM.yyyy_HH.mm.ss"
 
-$Form.controls.AddRange(@($GB_Backup1, $L_SelectBackup1, $CB_VBR1, $CB_VEM1, $CB_VONE1, $CB_Conf1, $L_Divider1, $GB_Backup2, $L_SelectFolder1, $BU_Folder1, $GB_Backup3, $RB_WinAuth1, $RB_SQLAuth1, $TB_UserName1, $TB_Password1, $GB_Backup4, $PB_Status1, $BU_Start1, $BU_Cancel1))
-$GB_Backup1.controls.AddRange(@($L_SelectBackup1, $CB_VBR1, $CB_VEM1, $CB_VONE1, $CB_Conf1))
+$Form.controls.AddRange(@($GB_Backup1, $CB_VBR1, $CB_VEM1, $CB_VONE1, $CB_Conf1, $GB_Backup2, $L_SelectFolder1, $BU_Folder1, $GB_Backup3, $RB_WinAuth1, $RB_SQLAuth1, $TB_UserName1, $TB_Password1, $GB_Backup4, $L_Status1, $BU_Start1, $BU_Cancel1))
+$GB_Backup1.controls.AddRange(@($CB_VBR1, $CB_VEM1, $CB_VONE1, $CB_Conf1))
 $GB_Backup2.controls.AddRange(@($L_SelectFolder1, $BU_Folder1))
 $GB_Backup3.controls.AddRange(@($RB_WinAuth1, $RB_SQLAuth1, $TB_UserName1, $TB_Password1))
-$GB_Backup4.controls.Add($PB_Status1)
+$GB_Backup4.controls.Add($L_Status1)
 
 #If SQL Auth Checkbox is checked, Username and Password input appear
 $RB_WinAuth1.Add_CheckedChanged( {
@@ -197,19 +196,21 @@ $BU_Folder1.Add_Click( {
         }
     })
 $BU_Start1.Add_Click( {
-        #$BU_Start1.Text = "Running..."
-        $PB_Status1.Value = 10
+        $L_Status1.Text = "Running..."
         if ($RB_WinAuth1.Checked -eq "True") {
             #Backup with Win Auth
             if (!$CB_VBR1.Checked -and !$CB_VEM1.Checked -and !$CB_VONE1.Checked -and !$CB_Conf1.Checked) {
-                #Nothing checked for backup
+                #Nothing checked for backup                
                 [System.Windows.Forms.MessageBox]::Show("No Veeam Database selected!", "Warning", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+                $L_Status1.Text = "Stopped with Errors"
             }
             if ($L_SelectFolder1.Text -eq "No Backup folder selected") {
                 #No folder selected
                 [System.Windows.Forms.MessageBox]::Show("No Folder for Backup selected!", "Warning", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+                $L_Status1.Text = "Stopped with Errors"
             }
             if ($CB_VBR1.Checked -eq "True") {    
+                $L_Status1.Text = "Running..."
                 try {  
                     $VBRSQLDBName = (get-item  -ErrorAction Stop "HKLM:\SOFTWARE\Veeam\Veeam Backup and Replication\").GetValue("SqlDatabaseName")
                     $VBRSQLInstanceName = (get-item "HKLM:\SOFTWARE\Veeam\Veeam Backup and Replication\").GetValue("SqlInstanceName")
@@ -219,19 +220,22 @@ $BU_Start1.Add_Click( {
                     $BackupQuery = "BACKUP DATABASE $VBRSQLDBName TO DISK = '$BackupFilePath'"
                     try {
                         Invoke-Sqlcmd -ErrorAction Stop -ServerInstance $VBRSQLServerName\$VBRSQLInstanceName -Database $VBRSQLDBName -Query $BackupQuery 
-                        $Global:BackupCounter = "True"
-                        $PB_Status1.Value = 25
-                        [System.Windows.Forms.MessageBox]::Show("Veeam BR backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)            
+                        $Global:BackupCounter = "True"                        
+                        [System.Windows.Forms.MessageBox]::Show("Veeam BR backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
+                        $L_Status1.Text = "Successful"           
                     }
-                    catch {
+                    catch {                        
                         [System.Windows.Forms.MessageBox]::Show("Unable to create VBR database backup!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+                        $L_Status1.Text = "Stopped with Errors"
                     }
                 }
-                catch {
-                    [System.Windows.Forms.MessageBox]::Show("No Veeam BR installation found in registry!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)        
+                catch {                    
+                    [System.Windows.Forms.MessageBox]::Show("No Veeam BR installation found in registry!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+                    $L_Status1.Text = "Stopped with Errors"        
                 }
             }
             if ($CB_VEM1.Checked -eq "True") {
+                $L_Status1.Text = "Running..."
                 try {
                     $VEMSQLDBName = (get-item -ErrorAction Stop "HKLM:\SOFTWARE\Veeam\Veeam Backup Reporting\").GetValue("SqlDatabaseName")
                     $VEMSQLInstanceName = (get-item "HKLM:\SOFTWARE\Veeam\Veeam Backup Reporting\").GetValue("SqlInstanceName")
@@ -241,19 +245,22 @@ $BU_Start1.Add_Click( {
                     $BackupQuery = "BACKUP DATABASE $VEMSQLDBName TO DISK = '$BackupFilePath'"
                     try {
                         Invoke-Sqlcmd -ErrorAction Stop -ServerInstance $VEMSQLServerName\$VEMSQLInstanceName -Database $VEMSQLDBName -Query $BackupQuery
-                        $Global:BackupCounter = "True"
-                        $PB_Status1.Value = 50
-                        [System.Windows.Forms.MessageBox]::Show("Veeam EM backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)               
+                        $Global:BackupCounter = "True"                        
+                        [System.Windows.Forms.MessageBox]::Show("Veeam EM backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
+                        $L_Status1.Text = "Successful"               
                     }
-                    catch {
+                    catch {                        
                         [System.Windows.Forms.MessageBox]::Show("Unable to create VEM database backup!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+                        $L_Status1.Text = "Stopped with Errors"
                     }
                 }
-                catch {
-                    [System.Windows.Forms.MessageBox]::Show("No Veeam EM installation found in registry!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)        
+                catch {                    
+                    [System.Windows.Forms.MessageBox]::Show("No Veeam EM installation found in registry!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+                    $L_Status1.Text = "Stopped with Errors"       
                 }
             }
             if ($CB_VONE1.Checked -eq "True") {
+                $L_Status1.Text = "Running..."
                 try {
                     $VONESQLDBName = (get-item -ErrorAction Stop "HKLM:\SOFTWARE\Veeam\Veeam ONE Monitor\db_config\").GetValue("db_name")
                     $VONESQLServerAndInstanceName = (get-item "HKLM:\SOFTWARE\Veeam\Veeam ONE Monitor\db_config\").GetValue("host")
@@ -262,19 +269,22 @@ $BU_Start1.Add_Click( {
                     $BackupQuery = "BACKUP DATABASE $VONESQLDBName TO DISK = '$BackupFilePath'"
                     try {
                         Invoke-Sqlcmd -ErrorAction Stop -ServerInstance $VONESQLServerAndInstanceName -Database $VONESQLDBName -Query $BackupQuery
-                        $Global:BackupCounter = "True"
-                        $PB_Status1.Value = 75
-                        [System.Windows.Forms.MessageBox]::Show("Veeam ONE backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)               
+                        $Global:BackupCounter = "True"                        
+                        [System.Windows.Forms.MessageBox]::Show("Veeam ONE backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
+                        $L_Status1.Text = "Successful"               
                     }
-                    catch {
+                    catch {                        
                         [System.Windows.Forms.MessageBox]::Show("Unable to create Veeam ONE database backup!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+                        $L_Status1.Text = "Stopped with Errors"
                     }
                 }
-                catch {
-                    [System.Windows.Forms.MessageBox]::Show("No Veeam ONE installation found in registry!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)        
+                catch {                    
+                    [System.Windows.Forms.MessageBox]::Show("No Veeam ONE installation found in registry!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+                    $L_Status1.Text = "Stopped with Errors"        
                 }
             }
             if ($CB_Conf1.Checked -eq "True") {
+                $L_Status1.Text = "Running..."
                 try {
                     $CurrentConfigBackup = Get-VBRConfigurationBackupJob
                     $CurrentRepository = $CurrentConfigBackup.Target
@@ -285,36 +295,38 @@ $BU_Start1.Add_Click( {
                     Start-VBRConfigurationBackupJob
                     Set-VBRConfigurationBackupJob -Repository $CurrentRepository
                     Remove-VBRBackupRepository -Repository $TempRepository -Confirm:$false
-                    $Global:BackupCounter = "True"
-                    $PB_Status1.Value = 90
-                    [System.Windows.Forms.MessageBox]::Show("Veeam Configuration backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)               
+                    $Global:BackupCounter = "True"                    
+                    [System.Windows.Forms.MessageBox]::Show("Veeam Configuration backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
+                    $L_Status1.Text = "Successful"               
                 }
-                catch {
-                    [System.Windows.Forms.MessageBox]::Show("Unable to create Veeam Configuration backup", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)        
+                catch {                    
+                    [System.Windows.Forms.MessageBox]::Show("Unable to create Veeam Configuration backup", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+                    $L_Status1.Text = "Stopped with Errors"       
                 }
             }
             if ($Global:BackupCounter -eq "True") {
-                $PB_Status1.Value = 100
+                $L_Status1.Text = "Successful and Exiting..."
                 Start-Sleep -Seconds 1.5
                 $Form.Dispose()
             }
             else {
-                #$BU_Start1.Text = "Start"
-                $PB_Status1.Value = 0
+                $L_Status1.Text = "Stopped"                
             }
         }
         else {
             $UserName = $TB_UserName1.Text
             $Password = $TB_Password1.Text
-            #$BU_Start1.Text = "Running..."
-            $PB_Status1.Value = 10
-            if (!$CB_VBR1.Checked -and !$CB_VEM1.Checked -and !$CB_VONE1.Checked) {
+            $L_Status1.Text = "Running"         
+            if (!$CB_VBR1.Checked -and !$CB_VEM1.Checked -and !$CB_VONE1.Checked) {                
                 [System.Windows.Forms.MessageBox]::Show("No Veeam Database selected!", "Warning", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+                $L_Status1.Text = "Stopped with Errors"
             }
-            if ($BU_Folder1.Text -ne "Backup folder selected") {
+            if ($BU_Folder1.Text -ne "Backup folder selected") {                
                 [System.Windows.Forms.MessageBox]::Show("No Folder for Backup selected!", "Warning", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+                $L_Status1.Text = "Stopped with Errors"
             }
-            if ($CB_VBR1.Checked -eq "True") {    
+            if ($CB_VBR1.Checked -eq "True") {
+                $L_Status1.Text = "Running..."    
                 try {  
                     $VBRSQLDBName = (get-item  -ErrorAction Stop "HKLM:\SOFTWARE\Veeam\Veeam Backup and Replication\").GetValue("SqlDatabaseName")
                     $VBRSQLInstanceName = (get-item "HKLM:\SOFTWARE\Veeam\Veeam Backup and Replication\").GetValue("SqlInstanceName")
@@ -324,19 +336,22 @@ $BU_Start1.Add_Click( {
                     $BackupQuery = "BACKUP DATABASE $VBRSQLDBName TO DISK = '$BackupFilePath'"
                     try {
                         Invoke-Sqlcmd -ErrorAction Stop -ServerInstance $VBRSQLServerName\$VBRSQLInstanceName -Database $VBRSQLDBName -Username $UserName -Password $Password -Query $BackupQuery 
-                        $Global:BackupCounter = "True"
-                        $PB_Status1.Value = 25
-                        [System.Windows.Forms.MessageBox]::Show("Veeam BR backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)            
+                        $Global:BackupCounter = "True"                        
+                        [System.Windows.Forms.MessageBox]::Show("Veeam BR backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
+                        $L_Status1.Text = "Successful"           
                     }
-                    catch {
+                    catch {                        
                         [System.Windows.Forms.MessageBox]::Show("Unable to create VBR database backup!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+                        $L_Status1.Text = "Stopped with Errors"
                     }
                 }
-                catch {
-                    [System.Windows.Forms.MessageBox]::Show("No Veeam BR installation found in registry!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)        
+                catch {                    
+                    [System.Windows.Forms.MessageBox]::Show("No Veeam BR installation found in registry!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+                    $L_Status1.Text = "Stopped with Errors"       
                 }
             }
             if ($CB_VEM1.Checked -eq "True") {
+                $L_Status1.Text = "Running..."
                 try {
                     $VEMSQLDBName = (get-item -ErrorAction Stop "HKLM:\SOFTWARE\Veeam\Veeam Backup Reporting\").GetValue("SqlDatabaseName")
                     $VEMSQLInstanceName = (get-item "HKLM:\SOFTWARE\Veeam\Veeam Backup Reporting\").GetValue("SqlInstanceName")
@@ -346,19 +361,22 @@ $BU_Start1.Add_Click( {
                     $BackupQuery = "BACKUP DATABASE $VEMSQLDBName TO DISK = '$BackupFilePath'"
                     try {
                         Invoke-Sqlcmd -ErrorAction Stop -ServerInstance $VEMSQLServerName\$VEMSQLInstanceName -Database $VEMSQLDBName -Username $UserName -Password $Password -Query $BackupQuery
-                        $Global:BackupCounter = "True"
-                        $PB_Status1.Value = 50
-                        [System.Windows.Forms.MessageBox]::Show("Veeam EM backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)               
+                        $Global:BackupCounter = "True"                        
+                        [System.Windows.Forms.MessageBox]::Show("Veeam EM backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
+                        $L_Status1.Text = "Successful"              
                     }
-                    catch {
+                    catch {                        
                         [System.Windows.Forms.MessageBox]::Show("Unable to create VEM database backup!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+                        $L_Status1.Text = "Stopped with Errors"
                     }
                 }
-                catch {
-                    [System.Windows.Forms.MessageBox]::Show("No Veeam EM installation found in registry!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)        
+                catch {                    
+                    [System.Windows.Forms.MessageBox]::Show("No Veeam EM installation found in registry!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+                    $L_Status1.Text = "Stopped with Errors"       
                 }
             }
             if ($CB_VONE1.Checked -eq "True") {
+                $L_Status1.Text = "Running..."
                 try {
                     $VONESQLDBName = (get-item -ErrorAction Stop "HKLM:\SOFTWARE\Veeam\Veeam ONE Monitor\db_config\").GetValue("db_name")
                     $VONESQLServerAndInstanceName = (get-item "HKLM:\SOFTWARE\Veeam\Veeam ONE Monitor\db_config\").GetValue("host")
@@ -367,19 +385,22 @@ $BU_Start1.Add_Click( {
                     $BackupQuery = "BACKUP DATABASE $VONESQLDBName TO DISK = '$BackupFilePath'"
                     try {
                         Invoke-Sqlcmd -ErrorAction Stop -ServerInstance $VONESQLServerAndInstanceName -Database $VONESQLDBName -Username $UserName -Password $Password -Query $BackupQuery
-                        $Global:BackupCounter = "True"
-                        $PB_Status1.Value = 75
-                        [System.Windows.Forms.MessageBox]::Show("Veeam ONE backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)               
+                        $Global:BackupCounter = "True"                        
+                        [System.Windows.Forms.MessageBox]::Show("Veeam ONE backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
+                        $L_Status1.Text = "Successful"              
                     }
-                    catch {
+                    catch {                        
                         [System.Windows.Forms.MessageBox]::Show("Unable to create Veeam ONE database backup!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+                        $L_Status1.Text = "Stopped with Errors"
                     }
                 }
-                catch {
-                    [System.Windows.Forms.MessageBox]::Show("No Veeam ONE installation found in registry!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)        
+                catch {                    
+                    [System.Windows.Forms.MessageBox]::Show("No Veeam ONE installation found in registry!", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+                    $L_Status1.Text = "Stopped with Errors"        
                 }
             }
             if ($CB_Conf1.Checked -eq "True") {
+                $L_Status1.Text = "Running..."
                 try {
                     $CurrentConfigBackup = Get-VBRConfigurationBackupJob
                     $CurrentRepository = $CurrentConfigBackup.Target
@@ -390,22 +411,22 @@ $BU_Start1.Add_Click( {
                     Start-VBRConfigurationBackupJob
                     Set-VBRConfigurationBackupJob -Repository $CurrentRepository
                     Remove-VBRBackupRepository -Repository $TempRepository -Confirm:$false
-                    $Global:BackupCounter = "True"
-                    $PB_Status1.Value = 90
-                    [System.Windows.Forms.MessageBox]::Show("Veeam Configuration backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)               
+                    $Global:BackupCounter = "True"                    
+                    [System.Windows.Forms.MessageBox]::Show("Veeam Configuration backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
+                    $L_Status1.Text = "Successful"               
                 }
-                catch {
-                    [System.Windows.Forms.MessageBox]::Show("Unable to create Veeam Configuration backup", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)        
+                catch {                    
+                    [System.Windows.Forms.MessageBox]::Show("Unable to create Veeam Configuration backup", "Error", 0, [System.Windows.Forms.MessageBoxIcon]::Exclamation)
+                    $L_Status1.Text = "Stopped with Errors"        
                 }
             }
             if ($Global:BackupCounter -eq "True") {
-                $PB_Status1.Value = 100
+                $L_Status1.Text = "Sucessful and Exiting..."
                 Start-Sleep -Seconds 1.5
                 $Form.Dispose()
             }
             else {
-                #$BU_Start1.Text = "Start"
-                $PB_Status1.Value = 0
+                $L_Status1.Text = "Stopped"                
             }
         }
     })

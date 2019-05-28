@@ -1,3 +1,6 @@
+#This script was created by Tim Rogait and is licensed by the MIT software license.
+#For detailed desciptions, visit cloud-avenger.com
+
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
@@ -9,7 +12,9 @@ $Form.text = "Veeam Database Backup"
 $Form.TopMost = $true
 $Form.AutoSize = $false
 $Form.FormBorderStyle = 'FixedDialog'
+$Form.Font = 'Microsoft Sans Serif,10'
 
+#Group for Databases -------------------------------------------------------------
 $GB_Backup1 = New-Object system.Windows.Forms.Groupbox
 $GB_Backup1.height = 155
 $GB_Backup1.width = 378
@@ -49,6 +54,7 @@ $CB_Conf1.height = 25
 $CB_Conf1.location = New-Object System.Drawing.Point(11, 120)
 $CB_Conf1.Font = 'Microsoft Sans Serif,10'
 
+#Group for Destination -------------------------------------------------------------
 $GB_Backup2 = New-Object system.Windows.Forms.Groupbox
 $GB_Backup2.height = 70
 $GB_Backup2.width = 378
@@ -56,6 +62,7 @@ $GB_Backup2.text = "Choose the Backup destination:"
 $GB_Backup2.location = New-Object System.Drawing.Point(11, 180)
 $GB_Backup2.Font = 'Microsoft Sans Serif,10'
 
+#Folder Description
 $L_SelectFolder1 = New-Object system.Windows.Forms.Label
 $L_SelectFolder1.text = "No Backup folder selected"
 $L_SelectFolder1.width = 320
@@ -64,7 +71,7 @@ $L_SelectFolder1.location = New-Object System.Drawing.Point(11, 35)
 $L_SelectFolder1.Font = 'Microsoft Sans Serif,10'
 $L_SelectFolder1.BorderStyle = 'FixedSingle'
 
-# Combined Backup Destination Folder
+#Combined Backup Destination Folder
 $BU_Folder1 = New-Object system.Windows.Forms.Button
 $BU_Folder1.text = "..."
 $BU_Folder1.width = 30
@@ -72,6 +79,7 @@ $BU_Folder1.height = 20
 $BU_Folder1.location = New-Object System.Drawing.Point(340, 35)
 $BU_Folder1.Font = 'Microsoft Sans Serif,10'
 
+#Group for Authentication -------------------------------------------------------------
 $GB_Backup3 = New-Object system.Windows.Forms.Groupbox
 $GB_Backup3.height = 110
 $GB_Backup3.width = 378
@@ -99,6 +107,7 @@ $RB_SQLAuth1.location = New-Object System.Drawing.Point(211, 30)
 $RB_SQLAuth1.Font = 'Microsoft Sans Serif,10'
 $RB_SQLAuth1.Checked = $false
 
+#SQL Username Input
 $TB_UserName1 = New-Object System.Windows.Forms.TextBox
 $TB_UserName1.text = "Input Username"
 $TB_UserName1.AutoSize = $false
@@ -108,6 +117,7 @@ $TB_UserName1.location = New-Object System.Drawing.Point(11, 70)
 $TB_UserName1.Font = 'Microsoft Sans Serif,10'
 $TB_UserName1.Enabled =$false
 
+#SQL Password Input
 $TB_Password1 = New-Object System.Windows.Forms.TextBox
 $TB_Password1.text = "Input Password"
 $TB_Password1.AutoSize = $false
@@ -117,6 +127,7 @@ $TB_Password1.location = New-Object System.Drawing.Point(152, 70)
 $TB_Password1.Font = 'Microsoft Sans Serif,10'
 $TB_Password1.Enabled =$false
 
+#Group for Status -------------------------------------------------------------
 $GB_Backup4 = New-Object system.Windows.Forms.Groupbox
 $GB_Backup4.height = 70
 $GB_Backup4.width = 378
@@ -124,6 +135,7 @@ $GB_Backup4.text = "Status:"
 $GB_Backup4.location = New-Object System.Drawing.Point(11, 385)
 $GB_Backup4.Font = 'Microsoft Sans Serif,10'
 
+#Label shows Progress, but needs less resources than an actual Progress Bar
 $L_Status1 = New-Object system.Windows.Forms.Label
 $L_Status1.text = "Ready"
 $L_Status1.width = 358
@@ -131,6 +143,14 @@ $L_Status1.height = 20
 $L_Status1.location = New-Object System.Drawing.Point(11, 30)
 $L_Status1.Font = 'Microsoft Sans Serif,10'
 $L_Status1.BorderStyle = 'FixedSingle'
+
+#Buttons and Copyright -------------------------------------------------------------
+$L_Copyright1 = New-Object system.Windows.Forms.Label
+$L_Copyright1.text = "created by Tim Rogait"
+$L_Copyright1.width = 180
+$L_Copyright1.height = 25
+$L_Copyright1.location = New-Object System.Drawing.Point(11, 500)
+$L_Copyright1.Font = 'Microsoft Sans Serif,8'
 
 $BU_Start1 = New-Object system.Windows.Forms.Button
 $BU_Start1.text = "Start"
@@ -150,13 +170,13 @@ $Global:BackupFolder = $null
 $Global:BackupCounter = "False" #Disposes Window only if Backup was successfull
 $Global:Date = Get-Date -f "dd.MM.yyyy_HH.mm.ss"
 
-$Form.controls.AddRange(@($GB_Backup1, $CB_VBR1, $CB_VEM1, $CB_VONE1, $CB_Conf1, $GB_Backup2, $L_SelectFolder1, $BU_Folder1, $GB_Backup3, $RB_WinAuth1, $RB_SQLAuth1, $TB_UserName1, $TB_Password1, $GB_Backup4, $L_Status1, $BU_Start1, $BU_Cancel1))
+$Form.controls.AddRange(@($GB_Backup1, $CB_VBR1, $CB_VEM1, $CB_VONE1, $CB_Conf1, $GB_Backup2, $L_SelectFolder1, $BU_Folder1, $GB_Backup3, $RB_WinAuth1, $RB_SQLAuth1, $TB_UserName1, $TB_Password1, $GB_Backup4, $L_Status1, $L_Copyright1, $BU_Start1, $BU_Cancel1))
 $GB_Backup1.controls.AddRange(@($CB_VBR1, $CB_VEM1, $CB_VONE1, $CB_Conf1))
 $GB_Backup2.controls.AddRange(@($L_SelectFolder1, $BU_Folder1))
 $GB_Backup3.controls.AddRange(@($RB_WinAuth1, $RB_SQLAuth1, $TB_UserName1, $TB_Password1))
 $GB_Backup4.controls.Add($L_Status1)
 
-#If SQL Auth Checkbox is checked, Username and Password input appear
+#If SQL Auth Checkbox is checked, Username and Password input were enabled
 $RB_WinAuth1.Add_CheckedChanged( {
         if ($RB_SQLAuth1.Checked -eq "True") {
             $TB_UserName1.text = "Input Username"

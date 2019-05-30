@@ -247,13 +247,13 @@ $BU_Start1.Add_Click( {
                 if ($RB_WinAuth1.Checked -eq "True") {
                     #Win Auth
                     Invoke-Sqlcmd -ErrorAction Stop -ServerInstance $VBRSQLServerName\$VBRSQLInstanceName -Database $VBRSQLDBName -Query $BackupQuery                        
-                    [System.Windows.Forms.MessageBox]::Show("Veeam BR Backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
+                    [System.Windows.Forms.MessageBox]::Show("Veeam BR Backup created!", "Success", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
                     $Global:BackupCounter = $Global:BackupCounter = + 1
                 }
                 elseif ($RB_SQLAuth1.Checked -eq "True") {
                     #SQL Auth
                     Invoke-Sqlcmd -ErrorAction Stop -ServerInstance $VBRSQLServerName\$VBRSQLInstanceName -Database $VBRSQLDBName -Username $UserName -Password $Password -Query $BackupQuery                     
-                    [System.Windows.Forms.MessageBox]::Show("Veeam BR Backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
+                    [System.Windows.Forms.MessageBox]::Show("Veeam BR Backup created!", "Success", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
                     $Global:BackupCounter = $Global:BackupCounter = + 1
                 }      
             }
@@ -279,13 +279,13 @@ $BU_Start1.Add_Click( {
                 if ($RB_WinAuth1.Checked -eq "True") {
                     #Win Auth
                     Invoke-Sqlcmd -ErrorAction Stop -ServerInstance $VEMSQLServerName\$VEMSQLInstanceName -Database $VEMSQLDBName -Query $BackupQuery                        
-                    [System.Windows.Forms.MessageBox]::Show("Veeam EM Backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
+                    [System.Windows.Forms.MessageBox]::Show("Veeam EM Backup created!", "Success", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
                     $Global:BackupCounter = $Global:BackupCounter = + 1
                 }
                 elseif ($RB_SQLAuth1.Checked -eq "True") {
                     #SQL Auth
                     Invoke-Sqlcmd -ErrorAction Stop -ServerInstance $VEMSQLServerName\$VEMSQLInstanceName -Database $VEMSQLDBName -Username $UserName -Password $Password -Query $BackupQuery                     
-                    [System.Windows.Forms.MessageBox]::Show("Veeam EM Backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
+                    [System.Windows.Forms.MessageBox]::Show("Veeam EM Backup created!", "Success", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
                     $Global:BackupCounter = $Global:BackupCounter = + 1
                 }      
             }
@@ -311,13 +311,13 @@ $BU_Start1.Add_Click( {
                 if ($RB_WinAuth1.Checked -eq "True") {
                     #Win Auth
                     Invoke-Sqlcmd -ErrorAction Stop -ServerInstance $VONESQLServerAndInstanceName -Database $VONESQLDBName -Query $BackupQuery
-                    [System.Windows.Forms.MessageBox]::Show("Veeam ONE Backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
+                    [System.Windows.Forms.MessageBox]::Show("Veeam ONE Backup created!", "Success", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
                     $Global:BackupCounter = $Global:BackupCounter = + 1
                 }
                 elseif ($RB_SQLAuth1.Checked -eq "True") {
                     #SQL Auth
                     Invoke-Sqlcmd -ErrorAction Stop -ServerInstance $VONESQLServerAndInstanceName -Database $VONESQLDBName -Username $UserName -Password $Password -Query $BackupQuery                                             
-                    [System.Windows.Forms.MessageBox]::Show("Veeam ONE Backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
+                    [System.Windows.Forms.MessageBox]::Show("Veeam ONE Backup created!", "Success", 0, [System.Windows.Forms.MessageBoxIcon]::Information)
                     $Global:BackupCounter = $Global:BackupCounter = + 1
                 }      
             }
@@ -342,7 +342,7 @@ $BU_Start1.Add_Click( {
             Start-VBRConfigurationBackupJob
             Set-VBRConfigurationBackupJob -Repository $CurrentRepository
             Remove-VBRBackupRepository -Repository $TempRepository -Confirm:$false                   
-            [System.Windows.Forms.MessageBox]::Show("Veeam Configuration Backup created!", "Sucess", 0, [System.Windows.Forms.MessageBoxIcon]::Information)               
+            [System.Windows.Forms.MessageBox]::Show("Veeam Configuration Backup created!", "Success", 0, [System.Windows.Forms.MessageBoxIcon]::Information)               
             $Global:BackupCounter = $Global:BackupCounter = + 1
         }
         catch {                    

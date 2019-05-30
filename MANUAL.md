@@ -24,4 +24,4 @@ If one of the backups fails, you will receive a error message for the Database, 
 
 The Database informations like the instance name will be read from the Windows Registry during runtime, so there is no need to worry if you changed the default names or paths.
 
-The Configuration backup settings are read from your environment as well and a temporary Veeam repository is created for your selected folder to have all the backups in the same folder path. Afterwards the repository gets deleted. 
+The Configuration backup settings are read from your environment as well and a temporary Veeam repository is created for your selected folder to have all the backups in the same folder path. Afterwards the repository gets deleted.
